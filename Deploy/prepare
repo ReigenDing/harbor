@@ -1,17 +1,17 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import configparser
-import StringIO
-import os 
+from io import StringIO
+import os
 from string import Template
 
 # Read configuration
-conf = StringIO.StringIO()
+conf = StringIO()
 conf.write("[configuration]\n")
 conf.write(open("harbor.cfg").read())
 conf.seek(0, os.SEEK_SET)
 cp = configparser.RawConfigParser()
-cp.readfp()
+cp.readfp(conf)
 
 hostname = cp.get("configuration", "hostname")
 ui_url = cp.get("configuration", "ui_url_protocol") + "://" + hostname
@@ -23,16 +23,16 @@ email_from = cp.get("configuration", "email_from")
 harbor_admin_password = cp.get("configuration", "harbor_admin_password")
 auth_mode = cp.get("configuration", "auth_mode")
 ldap_url = cp.get("configuration", "ldap_url")
-ldap_bassdn = cp.get("configuration", "ldap_bassdn")
+ldap_basedn = cp.get("configuration", "ldap_basedn")
 db_password = cp.get("configuration", "db_password")
 ########
 
-base_dir = os.path.dirname(__file__) 
+base_dir = os.path.dirname(__file__)
 config_dir = os.path.join(base_dir, "config")
 templates_dir = os.path.join(base_dir, "templates")
 
 
-ui_config_dir = os.path.join(config_dir,"ui")
+ui_config_dir = os.path.join(config_dir, "ui")
 if not os.path.exists(ui_config_dir):
     os.makedirs(os.path.join(config_dir, "ui"))
 
@@ -40,47 +40,49 @@ db_config_dir = os.path.join(config_dir, "db")
 if not os.path.exists(db_config_dir):
     os.makedirs(os.path.join(config_dir, "db"))
 
+
 def render(src, dest, **kw):
     t = Template(open(src, 'r').read())
     with open(dest, 'w') as f:
         f.write(t.substitute(**kw))
-    print "Generated configuration file: %s" % dest
+    print("Generated configuration file: %s" % dest)
+
 
 ui_conf_env = os.path.join(config_dir, "ui", "env")
-ui_conf = os.path.join(config_dir, "ui", "app.conf") 
+ui_conf = os.path.join(config_dir, "ui", "app.conf")
 registry_conf = os.path.join(config_dir, "registry", "config.yml")
 db_conf_env = os.path.join(config_dir, "db", "env")
 
-conf_files = [ ui_conf, ui_conf_env, registry_conf, db_conf_env ]
+conf_files = [ui_conf, ui_conf_env, registry_conf, db_conf_env]
 for f in conf_files:
     if os.path.exists(f):
-        print "Clearing the configuration file: %s" % f
+        print("Clearing the configuration file: %s" % f)
         os.remove(f)
 
 render(os.path.join(templates_dir, "ui", "env"),
-        ui_conf_env,
-        hostname=hostname,
-        ui_url=ui_url,
-        auth_mode=auth_mode,
-        admin_pwd=harbor_admin_password,
-        ldap_url=ldap_url,
-        ldap_basedn=ldap_basedn)
+       ui_conf_env,
+       hostname=hostname,
+       ui_url=ui_url,
+       auth_mode=auth_mode,
+       admin_pwd=harbor_admin_password,
+       ldap_url=ldap_url,
+       ldap_basedn=ldap_basedn)
 
 render(os.path.join(templates_dir, "ui", "app.conf"),
-        ui_conf,
-        email_server=email_server,
-        email_server_port=email_server_port,
-        email_user_name=email_username,
-        email_user_password=email_password,
-        email_from=email_from,
-        ui_url=ui_url)
+       ui_conf,
+       email_server=email_server,
+       email_server_port=email_server_port,
+       email_user_name=email_username,
+       email_user_password=email_password,
+       email_from=email_from,
+       ui_url=ui_url)
 
 render(os.path.join(templates_dir, "registry", "config.yml"),
-        registry_conf,
-        ui_url=ui_url)
+       registry_conf,
+       ui_url=ui_url)
 
 render(os.path.join(templates_dir, "db", "env"),
-        db_conf_env,
-        db_password=db_password)
+       db_conf_env,
+       db_password=db_password)
 
-print "The configuration files are ready, please use docker-compose to start the service."
+print("The configuration files are ready, please use docker-compose to start the service.")
