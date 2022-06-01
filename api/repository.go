@@ -16,6 +16,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -75,6 +76,7 @@ func (ra *RepositoryAPI) Get() {
 		return
 	}
 	repoList, err := svc_utils.GetRepoFromCache()
+	fmt.Printf("repo list => %v", repoList)
 	if err != nil {
 		beego.Error("Failed to get repo from cache, error:", err)
 		ra.RenderError(500, "internal sever error")

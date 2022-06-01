@@ -18,16 +18,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
-
-	"github.com/vmware/harbor/dao"
-	"github.com/vmware/harbor/models"
-	_ "github.com/vmware/harbor/opt_auth/db"
-	_ "github.com/vmware/harbor/opt_auth/ldap"
-	_ "github.com/vmware/harbor/routers"
-
 	"os"
 
 	"github.com/astaxie/beego"
+	"github.com/vmware/harbor/dao"
+	"github.com/vmware/harbor/models"
+
+	_ "github.com/vmware/harbor/opt_auth/db"
+	_ "github.com/vmware/harbor/opt_auth/ldap"
+	_ "github.com/vmware/harbor/routers"
 )
 
 const (
@@ -67,7 +66,8 @@ func updateInitPassword(userId int, password string) error {
 func main() {
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
-
+	beego.BConfig.WebConfig.EnableDocs = true
+	beego.BConfig.Log.AccessLogs = true
 	//conf/app.conf -> os.Getenv("config_path")
 	configPath := os.Getenv("CONFIG_PATH")
 	if len(configPath) != 0 {

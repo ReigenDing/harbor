@@ -1,20 +1,21 @@
 /*
-    Copyright (c) 2016 VMware, Inc. All Rights Reserved.
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-        
-        http://www.apache.org/licenses/LICENSE-2.0
-        
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+   Copyright (c) 2016 VMware, Inc. All Rights Reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 package dao
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -60,17 +61,24 @@ func GenerateRandomString() (string, error) {
 }
 
 func init() {
+	fmt.Println("dao base init")
+	beego.Error("register")
 	orm.RegisterDriver("mysql", orm.DRMySQL)
 
 	addr := os.Getenv("MYSQL_HOST")
+	fmt.Println(addr)
+	beego.Error(addr)
 	if len(addr) == 0 {
 		addr = os.Getenv("MYSQL_PORT_3306_TCP_ADDR")
 	}
 
 	port := os.Getenv("MYSQL_PORT_3306_TCP_PORT")
+	fmt.Println(port)
 	username := os.Getenv("MYSQL_USR")
+	fmt.Println(username)
 
 	password := os.Getenv("MYSQL_ENV_MYSQL_ROOT_PASSWORD")
+	fmt.Println(password)
 	if len(password) == 0 {
 		password = os.Getenv("MYSQL_PWD")
 	}
@@ -91,17 +99,22 @@ func init() {
 	}
 
 	if !flag {
+		fmt.Println("exit")
+		fmt.Println(flag)
 		os.Exit(1)
 	}
 
 	db_str := username + ":" + password + "@tcp(" + addr + ":" + port + ")/registry"
+	fmt.Printf("db connect str [%s]\n", db_str)
 	ch := make(chan int, 1)
 	go func() {
 		var err error
 		var c net.Conn
 		for {
-			c, err = net.Dial("tcp", addr+":"+port)
+			fmt.Printf("dail => %s\n", addr+":"+port)
+			c, err = net.Dial("tcp", "127.0.0.1:3306")
 			if err == nil {
+				fmt.Printf("dial db str with err => %s\n", err)
 				c.Close()
 				ch <- 1
 			} else {
@@ -115,5 +128,6 @@ func init() {
 	case <-time.After(30 * time.Second):
 		panic("Failed to connect to DB after 30 seconds")
 	}
-	orm.RegisterDataBase("default", "mysql", db_str)
+	err := orm.RegisterDataBase("default", "mysql", db_str)
+	fmt.Println(err)
 }

@@ -122,5 +122,7 @@ func (l *LdapAuth) Validate(auth models.AuthModel) (*models.User, error) {
 }
 
 func init() {
+	fmt.Println("opt ldap init")
 	opt_auth.Register("ldap_auth", &LdapAuth{})
+	fmt.Println("opt ldap init end!!!")
 }

@@ -15,6 +15,8 @@
 package db
 
 import (
+	"fmt"
+
 	"github.com/vmware/harbor/dao"
 	"github.com/vmware/harbor/models"
 	"github.com/vmware/harbor/opt_auth"
@@ -31,5 +33,6 @@ func (d *DbAuth) Validate(auth models.AuthModel) (*models.User, error) {
 }
 
 func init() {
+	fmt.Println("opt db init")
 	opt_auth.Register("db_auth", &DbAuth{})
 }

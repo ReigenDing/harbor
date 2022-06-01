@@ -16,6 +16,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/vmware/harbor/models"
@@ -30,11 +31,14 @@ var Cache cache.Cache
 const CATALOG string = "catalog"
 
 func init() {
+	fmt.Println("service init")
 	var err error
 	Cache, err = cache.NewCache("memory", `{"interval":720}`)
 	if err != nil {
+		fmt.Printf("ceche with error %s\n", err)
 		beego.Error("Failed to initialize cache, error:", err)
 	}
+	fmt.Println("service init end!!!")
 }
 
 func RefreshCatalogCache() error {

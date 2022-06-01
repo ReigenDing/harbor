@@ -106,7 +106,7 @@ func QueryProject(query models.Project) ([]models.Project, error) {
 	 where p.deleted = 0 `
 
 	queryParam := make([]interface{}, 1)
-
+	fmt.Printf("query public => %d\n", query.Public)
 	if query.Public == 1 {
 		sql += ` and p.public = ?`
 		queryParam = append(queryParam, query.Public)
@@ -121,7 +121,7 @@ func QueryProject(query models.Project) ([]models.Project, error) {
 		queryParam = append(queryParam, query.Name)
 	}
 
-	sql += " order by p.creation_time desc "
+	sql += " order by p.name"
 
 	var r []models.Project
 	_, err := o.Raw(sql, queryParam).QueryRows(&r)
