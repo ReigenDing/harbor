@@ -15,7 +15,6 @@
 package dao
 
 import (
-	"fmt"
 	"log"
 	"net"
 
@@ -51,34 +50,27 @@ func isContainIllegalChar(s string, illegalChar []string) bool {
 
 func GenerateRandomString() (string, error) {
 	o := orm.NewOrm()
-	var salt string
-	err := o.Raw(`select uuid() as uuid`).QueryRow(&salt)
+	var uuid string
+	err := o.Raw(`select uuid() as uuid`).QueryRow(&uuid)
 	if err != nil {
 		return "", err
 	}
-	return salt, nil
+	return uuid, nil
 
 }
 
 func init() {
-	fmt.Println("dao base init")
-	beego.Error("register")
 	orm.RegisterDriver("mysql", orm.DRMySQL)
 
 	addr := os.Getenv("MYSQL_HOST")
-	fmt.Println(addr)
-	beego.Error(addr)
 	if len(addr) == 0 {
 		addr = os.Getenv("MYSQL_PORT_3306_TCP_ADDR")
 	}
 
 	port := os.Getenv("MYSQL_PORT_3306_TCP_PORT")
-	fmt.Println(port)
 	username := os.Getenv("MYSQL_USR")
-	fmt.Println(username)
 
 	password := os.Getenv("MYSQL_ENV_MYSQL_ROOT_PASSWORD")
-	fmt.Println(password)
 	if len(password) == 0 {
 		password = os.Getenv("MYSQL_PWD")
 	}
@@ -99,22 +91,17 @@ func init() {
 	}
 
 	if !flag {
-		fmt.Println("exit")
-		fmt.Println(flag)
 		os.Exit(1)
 	}
 
 	db_str := username + ":" + password + "@tcp(" + addr + ":" + port + ")/registry"
-	fmt.Printf("db connect str [%s]\n", db_str)
 	ch := make(chan int, 1)
 	go func() {
 		var err error
 		var c net.Conn
 		for {
-			fmt.Printf("dail => %s\n", addr+":"+port)
 			c, err = net.Dial("tcp", "127.0.0.1:3306")
 			if err == nil {
-				fmt.Printf("dial db str with err => %s\n", err)
 				c.Close()
 				ch <- 1
 			} else {
@@ -125,9 +112,8 @@ func init() {
 	}()
 	select {
 	case <-ch:
-	case <-time.After(30 * time.Second):
-		panic("Failed to connect to DB after 30 seconds")
+	case <-time.After(60 * time.Second):
+		panic("Failed to connect to DB after 60 seconds")
 	}
-	err := orm.RegisterDataBase("default", "mysql", db_str)
-	fmt.Println(err)
+	orm.RegisterDataBase("default", "mysql", db_str)
 }

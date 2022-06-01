@@ -66,14 +66,6 @@ func updateInitPassword(userId int, password string) error {
 func main() {
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
-	beego.BConfig.WebConfig.EnableDocs = true
-	beego.BConfig.Log.AccessLogs = true
-	//conf/app.conf -> os.Getenv("config_path")
-	configPath := os.Getenv("CONFIG_PATH")
-	if len(configPath) != 0 {
-		beego.Debug(fmt.Sprintf("Config path: %s", configPath))
-		beego.AppConfigPath = configPath
-	}
 
 	updateInitPassword(ADMIN_USER_ID, os.Getenv("HARBOR_ADMIN_PASSWORD"))
 
