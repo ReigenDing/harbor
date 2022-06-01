@@ -124,6 +124,7 @@ func (p *ProjectAPI) Get() {
 			projectList[i].Togglable = true
 		}
 	}
+	fmt.Printf("p list => %v", projectList)
 	p.Data["json"] = projectList
 	p.ServeJSON()
 }
@@ -162,10 +163,11 @@ func (p *ProjectAPI) FilterAccessLog() {
 
 	username := filter.Username
 	keywords := filter.Keywords
-	beginTime := filter.BeginTime
-	endTime := filter.EndTime
+	beginTime := time.Unix(filter.BeginTimestamp, 0)
+	endTime := time.Unix(filter.EndTimestamp, 0)
 
-	query := models.AccessLog{ProjectId: p.projectId, Username: "%" + username + "%", Keywords: keywords, BeginTime: beginTime, EndTime: endTime}
+	query := models.AccessLog{ProjectId: p.projectId, Username: "%" + username + "%", Keywords: keywords, BeginTime: beginTime, BeginTimestamp: filter.EndTimestamp, EndTime: endTime, EndTimestamp: filter.EndTimestamp}
+	log.Printf("Query AccessLog: begin: %v, end: %v, keyword: %s", query.BeginTime, query.EndTime, query.Keywords)
 	accessLogList, err := dao.GetAccessLogs(query)
 	if err != nil {
 		log.Printf("Error occurred in GetAccessLogs: %v", err)

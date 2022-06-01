@@ -19,17 +19,17 @@ import (
 )
 
 type AccessLog struct {
-	LogId     int
-	UserId    int
-	ProjectId int64
-	RepoName  string
-	Guid      string
-	Operation string
-	OpTime    time.Time
-	OpTimeStr string
-
-	Username  string
-	Keywords  string
-	BeginTime string
-	EndTime   string
+	LogId          int
+	UserId         int
+	ProjectId      int64
+	RepoName       string
+	Guid           string
+	Operation      string
+	OpTime         time.Time
+	Username       string
+	Keywords       string
+	BeginTime      time.Time
+	BeginTimestamp int64
+	EndTime        time.Time
+	EndTimestamp   int64
 }
