@@ -66,7 +66,7 @@ func updateInitPassword(userId int, password string) error {
 func main() {
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
-
+	dao.InitDB()
 	updateInitPassword(ADMIN_USER_ID, os.Getenv("HARBOR_ADMIN_PASSWORD"))
 
 	beego.Run()
