@@ -290,13 +290,42 @@ func TestChangeUserPassword(t *testing.T) {
 		t.Fatalf("Error occurred in ChangeUserPassword: %v", err)
 	}
 
-	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewHarborTester12345"})
+	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester12345"})
 	if err != nil {
 		t.Fatalf("Error occurred in LoginByDb: %v", err)
 	}
 
 	if loginedUser.Username != USERNAME {
 		t.Fatalf("The username returned by Login does not match, expected: %s, actual: %s", USERNAME, loginedUser.Username)
+	}
+}
+
+func TestChangeUserPasswordWithOldPassword(t *testing.T) {
+	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester12345", Salt: currentUser.Salt}, "NewHarborTester1234")
+	if err != nil {
+		t.Fatalf("Error occurred in ChangeUserPassword: %v", err)
+	}
+	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester12345"})
+	if err != nil {
+		t.Fatalf("Error occurred in LoginByDb: %v", err)
+	}
+	if loginedUser.Username != USERNAME {
+		t.Fatalf("The username returned by Login does not match, expected: %s, actual: %s", USERNAME, loginedUser.Username)
+	}
+}
+
+func TestChangeUserPasswordWithIncorrentOldPassword(t *testing.T) {
+	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester12345", Salt: currentUser.Salt}, "WrongNewerHarborTester12345")
+	if err != nil {
+		t.Fatalf("Error does not occurred due to old password id incorrect")
+
+	}
+	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester12345"})
+	if err != nil {
+		t.Fatalf("Error occurred in LoginByDb: %v", err)
+	}
+	if loginedUser != nil {
+		t.Fatalf("The login user is not nil, acutal: %+v", loginedUser)
 	}
 }
 
@@ -391,7 +420,7 @@ func TestGetAccessLog(t *testing.T) {
 		t.Fatalf("The length of accesslog list should be 1, actual: %d", len(accessLogs))
 	}
 	if accessLogs[0].RepoName != PROJECT_NAME+"/" {
-		t.Fatalf("The project name does not match, expected: %s, actual: %s==", PROJECT_NAME, accessLogs[0].RepoName)
+		t.Fatalf("The project name does not match, expected: %s, actual: %s==", PROJECT_NAME+"/", accessLogs[0].RepoName)
 	}
 }
 
