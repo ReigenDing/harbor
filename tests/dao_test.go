@@ -285,7 +285,7 @@ func TestResetUserPassword(t *testing.T) {
 }
 
 func TestChangeUserPassword(t *testing.T) {
-	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewHarborTester12345", Salt: currentUser.Salt})
+	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "HarborTester12345", Salt: currentUser.Salt}, "NewHarborTester12345")
 	if err != nil {
 		t.Fatalf("Error occurred in ChangeUserPassword: %v", err)
 	}

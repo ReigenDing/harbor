@@ -67,7 +67,7 @@ func InitDB() {
 	}
 
 	port := os.Getenv("MYSQL_PORT_3306_TCP_PORT")
-	username := os.Getenv("MYSQL_USR")
+	username := os.Getenv("MYSQL_USER")
 
 	password := os.Getenv("MYSQL_ENV_MYSQL_ROOT_PASSWORD")
 	if len(password) == 0 {
