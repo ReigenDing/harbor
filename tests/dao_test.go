@@ -285,7 +285,7 @@ func TestResetUserPassword(t *testing.T) {
 }
 
 func TestChangeUserPassword(t *testing.T) {
-	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "HarborTester12345", Salt: currentUser.Salt}, "NewHarborTester12345")
+	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester12345", Salt: currentUser.Salt}, "HarborTester12345")
 	if err != nil {
 		t.Fatalf("Error occurred in ChangeUserPassword: %v", err)
 	}
@@ -301,11 +301,11 @@ func TestChangeUserPassword(t *testing.T) {
 }
 
 func TestChangeUserPasswordWithOldPassword(t *testing.T) {
-	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester12345", Salt: currentUser.Salt}, "NewHarborTester1234")
+	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester123456", Salt: currentUser.Salt}, "NewerHarborTester12345")
 	if err != nil {
 		t.Fatalf("Error occurred in ChangeUserPassword: %v", err)
 	}
-	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester12345"})
+	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester123456"})
 	if err != nil {
 		t.Fatalf("Error occurred in LoginByDb: %v", err)
 	}
@@ -315,12 +315,12 @@ func TestChangeUserPasswordWithOldPassword(t *testing.T) {
 }
 
 func TestChangeUserPasswordWithIncorrentOldPassword(t *testing.T) {
-	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester12345", Salt: currentUser.Salt}, "WrongNewerHarborTester12345")
-	if err != nil {
+	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NNewerHarborTester123456", Salt: currentUser.Salt}, "WrongNewerHarborTester12345")
+	if err == nil {
 		t.Fatalf("Error does not occurred due to old password id incorrect")
 
 	}
-	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester12345"})
+	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NNewerHarborTester123456"})
 	if err != nil {
 		t.Fatalf("Error occurred in LoginByDb: %v", err)
 	}
