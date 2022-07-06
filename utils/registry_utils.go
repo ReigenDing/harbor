@@ -1,16 +1,16 @@
 /*
-    Copyright (c) 2016 VMware, Inc. All Rights Reserved.
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-        
-        http://www.apache.org/licenses/LICENSE-2.0
-        
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+   Copyright (c) 2016 VMware, Inc. All Rights Reserved.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 package utils
 
@@ -55,9 +55,9 @@ func HttpGet(url, sessionId, username, password string) ([]byte, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
-	if response.StatusCode == 200 {
+	if response.StatusCode == http.StatusOK {
 		return result, nil
-	} else if response.StatusCode == 401 {
+	} else if response.StatusCode == http.StatusUnauthorized {
 		authenticate := response.Header.Get("WWW-Authenticate")
 		str := strings.Split(authenticate, " ")[1]
 		beego.Trace("url: " + url)
@@ -106,7 +106,7 @@ func HttpGet(url, sessionId, username, password string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		if response.StatusCode == 200 {
+		if response.StatusCode == http.StatusOK {
 			tt := make(map[string]string)
 			json.Unmarshal(result, &tt)
 			request, err = http.NewRequest("GET", url, nil)
