@@ -61,8 +61,7 @@ func (ra *RepositoryAPI) Get() {
 		ra.RenderError(http.StatusBadGateway, "Invalid project id")
 		return
 	}
-	projectQuery := models.Project{ProjectId: projectId}
-	p, err := dao.GetProjectById(projectQuery)
+	p, err := dao.GetProjectById(projectId)
 	if err != nil {
 		beego.Error("Error occurred in GetProjectById:", err)
 		ra.CustomAbort(http.StatusInternalServerError, "Internal error.")

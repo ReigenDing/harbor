@@ -12,7 +12,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package test
+package dao
 
 import (
 	// "fmt"
@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vmware/harbor/dao"
 	"github.com/vmware/harbor/models"
 
 	"github.com/astaxie/beego/orm"
@@ -117,7 +116,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("MYSQL_USER", dbUser)
 	os.Setenv("MYSQL_PWD", dbPassword)
 	os.Setenv("AUTH_MODE", "db_auth")
-	dao.InitDB()
+	InitDB()
 	clearUp(USERNAME)
 	os.Exit(m.Run())
 
@@ -133,7 +132,7 @@ func TestRegister(t *testing.T) {
 		Comment:  "register",
 	}
 
-	_, err := dao.Register(user)
+	_, err := Register(user)
 	if err != nil {
 		t.Errorf("Error occurred in Register: %v", err)
 	}
@@ -142,7 +141,7 @@ func TestRegister(t *testing.T) {
 	queryUser := models.User{
 		Username: USERNAME,
 	}
-	newUser, err := dao.GetUser(queryUser)
+	newUser, err := GetUser(queryUser)
 	if err != nil {
 		t.Errorf("Error occurred in GetUser: %v", err)
 	}
@@ -159,14 +158,14 @@ func TestUserExists(t *testing.T) {
 	var exists bool
 	var err error
 
-	exists, err = dao.UserExists(models.User{Username: USERNAME}, "username")
+	exists, err = UserExists(models.User{Username: USERNAME}, "username")
 	if err != nil {
 		t.Errorf("Error occurred in UserExists: %v", err)
 	}
 	if !exists {
 		t.Errorf("User %s was inserted but does not exist", USERNAME)
 	}
-	exists, err = dao.UserExists(models.User{Email: "tester01@vmware.com"}, "email")
+	exists, err = UserExists(models.User{Email: "tester01@vmware.com"}, "email")
 
 	if err != nil {
 		t.Errorf("Error occurred in UserExists: %v", err)
@@ -174,7 +173,7 @@ func TestUserExists(t *testing.T) {
 	if !exists {
 		t.Errorf("User with email %s inserted but does not exist", "tester01@vmware.com")
 	}
-	exists, err = dao.UserExists(models.User{Username: "NOTHERE"}, "username")
+	exists, err = UserExists(models.User{Username: "NOTHERE"}, "username")
 	if err != nil {
 		t.Errorf("Error occurred in UserExists: %v", err)
 	}
@@ -190,7 +189,7 @@ func TestLoginByUserName(t *testing.T) {
 		Password: "Abc12345",
 	}
 
-	loginUser, err := dao.LoginByDb(models.AuthModel{userQuery.Username, userQuery.Password})
+	loginUser, err := LoginByDb(models.AuthModel{userQuery.Username, userQuery.Password})
 	if err != nil {
 		t.Errorf("Error occurred in LoginByDb: %v", err)
 	}
@@ -210,7 +209,7 @@ func TestLoginByEmail(t *testing.T) {
 		Password: "Abc12345",
 	}
 
-	loginUser, err := dao.LoginByDb(models.AuthModel{userQuery.Email, userQuery.Password})
+	loginUser, err := LoginByDb(models.AuthModel{userQuery.Email, userQuery.Password})
 	if err != nil {
 		t.Errorf("Error occurred in LoginByDb: %v", err)
 	}
@@ -229,7 +228,7 @@ func TestGetUser(t *testing.T) {
 		Username: USERNAME,
 	}
 	var err error
-	currentUser, err = dao.GetUser(queryUser)
+	currentUser, err = GetUser(queryUser)
 	if err != nil {
 		t.Fatalf("Error occurred in GetUser, err: %s", err)
 	}
@@ -242,14 +241,14 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
-	users, err := dao.ListUsers(models.User{Username: "tester01"})
+	users, err := ListUsers(models.User{Username: "tester01"})
 	if err != nil {
 		t.Fatalf("Error occurred in ListUsers: %v", err)
 	}
 	if len(users) != 1 {
 		t.Fatalf("Expect one user in list, but the actual length id %d, the list: %+v", len(users), users)
 	}
-	users2, _ := dao.ListUsers(models.User{Username: USERNAME})
+	users2, _ := ListUsers(models.User{Username: USERNAME})
 	if len(users2) != 1 {
 		t.Fatalf("Expect one user in list, but the actual length is %d, the list: %+v", len(users), users)
 	}
@@ -259,22 +258,22 @@ func TestListUsers(t *testing.T) {
 }
 
 func TestResetUserPassword(t *testing.T) {
-	uuid, err := dao.GenerateRandomString()
+	uuid, err := GenerateRandomString()
 	if err != nil {
 		t.Fatalf("Error occurred in GenerateRandomString: %v", err)
 	}
 
-	err = dao.UpdateUserResetUuid(models.User{ResetUuid: uuid, Email: currentUser.Email})
+	err = UpdateUserResetUuid(models.User{ResetUuid: uuid, Email: currentUser.Email})
 	if err != nil {
 		t.Fatalf("Error occurred in UpdateUserResetUuid: %v", err)
 	}
 
-	err = dao.ResetUserPassword(models.User{UserId: currentUser.UserId, Password: "HarborTester12345", ResetUuid: uuid, Salt: currentUser.Salt})
+	err = ResetUserPassword(models.User{UserId: currentUser.UserId, Password: "HarborTester12345", ResetUuid: uuid, Salt: currentUser.Salt})
 	if err != nil {
 		t.Fatalf("Error occurred in ResetUserPassword: %v", err)
 	}
 
-	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "HarborTester12345"})
+	loginedUser, err := LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "HarborTester12345"})
 	if err != nil {
 		t.Fatalf("Error occurred in LoginByDb: %v", err)
 	}
@@ -285,12 +284,12 @@ func TestResetUserPassword(t *testing.T) {
 }
 
 func TestChangeUserPassword(t *testing.T) {
-	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester12345", Salt: currentUser.Salt}, "HarborTester12345")
+	err := ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester12345", Salt: currentUser.Salt}, "HarborTester12345")
 	if err != nil {
 		t.Fatalf("Error occurred in ChangeUserPassword: %v", err)
 	}
 
-	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester12345"})
+	loginedUser, err := LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester12345"})
 	if err != nil {
 		t.Fatalf("Error occurred in LoginByDb: %v", err)
 	}
@@ -301,11 +300,11 @@ func TestChangeUserPassword(t *testing.T) {
 }
 
 func TestChangeUserPasswordWithOldPassword(t *testing.T) {
-	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester123456", Salt: currentUser.Salt}, "NewerHarborTester12345")
+	err := ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NewerHarborTester123456", Salt: currentUser.Salt}, "NewerHarborTester12345")
 	if err != nil {
 		t.Fatalf("Error occurred in ChangeUserPassword: %v", err)
 	}
-	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester123456"})
+	loginedUser, err := LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NewerHarborTester123456"})
 	if err != nil {
 		t.Fatalf("Error occurred in LoginByDb: %v", err)
 	}
@@ -315,12 +314,12 @@ func TestChangeUserPasswordWithOldPassword(t *testing.T) {
 }
 
 func TestChangeUserPasswordWithIncorrentOldPassword(t *testing.T) {
-	err := dao.ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NNewerHarborTester123456", Salt: currentUser.Salt}, "WrongNewerHarborTester12345")
+	err := ChangeUserPassword(models.User{UserId: currentUser.UserId, Password: "NNewerHarborTester123456", Salt: currentUser.Salt}, "WrongNewerHarborTester12345")
 	if err == nil {
 		t.Fatalf("Error does not occurred due to old password id incorrect")
 
 	}
-	loginedUser, err := dao.LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NNewerHarborTester123456"})
+	loginedUser, err := LoginByDb(models.AuthModel{Principal: currentUser.Username, Password: "NNewerHarborTester123456"})
 	if err != nil {
 		t.Fatalf("Error occurred in LoginByDb: %v", err)
 	}
@@ -330,7 +329,7 @@ func TestChangeUserPasswordWithIncorrentOldPassword(t *testing.T) {
 }
 
 func TestQueryRelevantProjectsWhenNoProjectAdded(t *testing.T) {
-	projects, err := dao.QueryRelevantProjects(currentUser.UserId)
+	projects, err := QueryRelevantProjects(currentUser.UserId)
 	if err != nil {
 		t.Fatalf("Error occurred in QueryRelevantProjects: %v", err)
 	}
@@ -351,12 +350,12 @@ func TestAddProject(t *testing.T) {
 		OwnerName:    currentUser.Username,
 	}
 
-	err := dao.AddProject(project)
+	err := AddProject(project)
 	if err != nil {
 		t.Fatalf("Error occurred in AddProject: %v", err)
 	}
 
-	newProject, err := dao.GetProjectByName(PROJECT_NAME)
+	newProject, err := GetProjectByName(PROJECT_NAME)
 	if err != nil {
 		t.Fatalf("Error occurred in GetProjectByName: %v", err)
 	}
@@ -369,7 +368,7 @@ var currentProject *models.Project
 
 func TestGetProject(t *testing.T) {
 	var err error
-	currentProject, err = dao.GetProjectByName(PROJECT_NAME)
+	currentProject, err = GetProjectByName(PROJECT_NAME)
 	if err != nil {
 		t.Fatalf("Error occurred in GetProjectByName: %v", err)
 	}
@@ -412,7 +411,7 @@ func TestGetAccessLog(t *testing.T) {
 		UserId:    currentUser.UserId,
 		ProjectId: currentProject.ProjectId,
 	}
-	accessLogs, err := dao.GetAccessLogs(queryAccessLog)
+	accessLogs, err := GetAccessLogs(queryAccessLog)
 	if err != nil {
 		t.Fatalf("Error occurred in GetAccessLog: %v", err)
 	}
@@ -427,14 +426,14 @@ func TestGetAccessLog(t *testing.T) {
 func TestProjectExists(t *testing.T) {
 	var exists bool
 	var err error
-	exists, err = dao.ProjectExists(currentProject.ProjectId)
+	exists, err = ProjectExists(currentProject.ProjectId)
 	if err != nil {
 		t.Fatalf("Error occurred in ProjectExists: %v", err)
 	}
 	if !exists {
 		t.Errorf("The project with id: %d, does not exist", currentProject.ProjectId)
 	}
-	exists, err = dao.ProjectExists(currentProject.Name)
+	exists, err = ProjectExists(currentProject.Name)
 	if err != nil {
 		t.Fatalf("Error occurred in ProjectExists: %v", err)
 	}
@@ -443,25 +442,61 @@ func TestProjectExists(t *testing.T) {
 	}
 }
 
+func TestGetProjectById(t *testing.T) {
+	id := currentProject.ProjectId
+	p, err := GetProjectById(id)
+	if err != nil {
+		t.Errorf("Error in GetProjectById: %v, id: %d", err, id)
+	}
+	if p.Name != currentProject.Name {
+		t.Errorf("project name does not match, expexted: %s, %s, actual: %s", currentProject.Name, p.Name)
+	}
+}
+
+func TestGetUserByProject(t *testing.T) {
+	pid := currentProject.ProjectId
+	u1 := models.User{
+		Username: "%%Tester%%",
+	}
+	u2 := models.User{
+		Username: "nononono",
+	}
+	users, err := GetUserByProject(pid, u1)
+	if err != nil {
+		t.Errorf("Error happend in GetUserByProeject: %v, project Id: %d, user: %+v", u1)
+	}
+	if len(users) != 1 {
+		t.Errorf("unexpected length if user list, expected: 1, the user list: %+v", users)
+
+	}
+	users, err = GetUserByProject(pid, u2)
+	if err != nil {
+		t.Errorf("Error happened in GetUserByProject: %v, project Id: %d, user: %+v", u2)
+	}
+	if len(users) != 0 {
+		t.Errorf("unexpected length od user list, expected: 0, the user list: %+v", users)
+	}
+}
+
 func TestToggleProjectPublicity(t *testing.T) {
-	err := dao.ToggleProjectPublicity(currentProject.ProjectId, PUBLICITY_ON)
+	err := ToggleProjectPublicity(currentProject.ProjectId, PUBLICITY_ON)
 	if err != nil {
 		t.Fatalf("Error occurred in ToggleProjectPublicity: %v", err)
 	}
 
-	currentProject, err = dao.GetProjectByName(PROJECT_NAME)
+	currentProject, err = GetProjectByName(PROJECT_NAME)
 	if err != nil {
 		t.Fatalf("Error occurred in GetProjectByName: %v", err)
 	}
 	if currentProject.Public != PUBLICITY_ON {
 		t.Errorf("project, id: %d, its publicty is not on", currentProject.ProjectId)
 	}
-	err = dao.ToggleProjectPublicity(currentProject.ProjectId, PUBLICITY_OFF)
+	err = ToggleProjectPublicity(currentProject.ProjectId, PUBLICITY_OFF)
 	if err != nil {
 		t.Fatalf("Error occurred in ToggleProjectPublicity: %v", err)
 	}
 
-	currentProject, err = dao.GetProjectByName(PROJECT_NAME)
+	currentProject, err = GetProjectByName(PROJECT_NAME)
 	if err != nil {
 		t.Fatalf("Error occurred in GetProjectByName: %v", err)
 	}
@@ -470,6 +505,10 @@ func TestToggleProjectPublicity(t *testing.T) {
 		t.Errorf("project, id: %d, its publicity is not off", currentProject.ProjectId)
 	}
 }
+
+func TestIsProjectPublic(t *testing.T) {}
+
+func TestQueryProject(t *testing.T) {}
 
 func getUserProjectRole(projectId int64, userId int) []models.Role {
 	o := orm.NewOrm()
@@ -485,6 +524,8 @@ func getUserProjectRole(projectId int64, userId int) []models.Role {
 	return r
 }
 
+func TestGetUserProjectRoles(t *testing.T) {}
+
 func TestGetUserProjectRole(t *testing.T) {
 	r := getUserProjectRole(currentProject.ProjectId, currentUser.UserId)
 
@@ -499,7 +540,7 @@ func TestGetUserProjectRole(t *testing.T) {
 }
 
 func TestProjectPermission(t *testing.T) {
-	roleCode, err := dao.GetPermission(currentUser.Username, currentProject.Name)
+	roleCode, err := GetPermission(currentUser.Username, currentProject.Name)
 	if err != nil {
 		t.Fatalf("Error occurred in GetPermission: %v", err)
 	}
@@ -509,7 +550,7 @@ func TestProjectPermission(t *testing.T) {
 }
 
 func TestQueryRelevantProjects(t *testing.T) {
-	projects, err := dao.QueryRelevantProjects(currentUser.UserId)
+	projects, err := QueryRelevantProjects(currentUser.UserId)
 	if err != nil {
 		t.Fatalf("Error occurred in QueryRelevantProjects: %v", err)
 	}
@@ -522,7 +563,7 @@ func TestQueryRelevantProjects(t *testing.T) {
 }
 
 func TestAssignUserProjectRole(t *testing.T) {
-	err := dao.AddUserProjectRole(currentUser.UserId, currentProject.ProjectId, DEVELOPER)
+	err := AddUserProjectRole(currentUser.UserId, currentProject.ProjectId, DEVELOPER)
 	if err != nil {
 		t.Fatalf("Error occurred in AddUserProjectRole: %v", err)
 	}
@@ -540,7 +581,7 @@ func TestAssignUserProjectRole(t *testing.T) {
 }
 
 func TestDeleteUserProjectRole(t *testing.T) {
-	err := dao.DeleteUserProjectRoles(currentUser.UserId, currentProject.ProjectId)
+	err := DeleteUserProjectRoles(currentUser.UserId, currentProject.ProjectId)
 	if err != nil {
 		t.Fatalf("Error occurred in DeleteUserProjectRoles: %v", err)
 	}
@@ -552,12 +593,14 @@ func TestDeleteUserProjectRole(t *testing.T) {
 	}
 }
 
+func TestToggleAdminRole(t *testing.T) {}
+
 func TestDeleteUser(t *testing.T) {
-	err := dao.DeleteUser(currentUser.UserId)
+	err := DeleteUser(currentUser.UserId)
 	if err != nil {
 		t.Fatalf("Error occurred in DeleteUser: %v", err)
 	}
-	user, err := dao.GetUser(*currentUser)
+	user, err := GetUser(*currentUser)
 	if err != nil {
 		t.Fatalf("Error occurred in GetUser: %v", err)
 	}
