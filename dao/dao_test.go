@@ -449,7 +449,7 @@ func TestGetProjectById(t *testing.T) {
 		t.Errorf("Error in GetProjectById: %v, id: %d", err, id)
 	}
 	if p.Name != currentProject.Name {
-		t.Errorf("project name does not match, expexted: %s, %s, actual: %s", currentProject.Name, p.Name)
+		t.Errorf("project name does not match, expexted: %s, actual: %s", currentProject.Name, p.Name)
 	}
 }
 
@@ -463,7 +463,7 @@ func TestGetUserByProject(t *testing.T) {
 	}
 	users, err := GetUserByProject(pid, u1)
 	if err != nil {
-		t.Errorf("Error happend in GetUserByProeject: %v, project Id: %d, user: %+v", u1)
+		t.Errorf("Error happend in GetUserByProeject: %v, project Id: %d, user: %+v", err, pid, u1)
 	}
 	if len(users) != 1 {
 		t.Errorf("unexpected length if user list, expected: 1, the user list: %+v", users)
@@ -471,7 +471,7 @@ func TestGetUserByProject(t *testing.T) {
 	}
 	users, err = GetUserByProject(pid, u2)
 	if err != nil {
-		t.Errorf("Error happened in GetUserByProject: %v, project Id: %d, user: %+v", u2)
+		t.Errorf("Error happened in GetUserByProject: %v, project Id: %d, user: %+v", err, pid, u2)
 	}
 	if len(users) != 0 {
 		t.Errorf("unexpected length od user list, expected: 0, the user list: %+v", users)
@@ -506,9 +506,44 @@ func TestToggleProjectPublicity(t *testing.T) {
 	}
 }
 
-func TestIsProjectPublic(t *testing.T) {}
+func TestIsProjectPublic(t *testing.T) {
+	if isPubic := IsProjectPublic(PROJECT_NAME); isPubic {
+		t.Errorf("project, id: %d, its publicity is not false after turning off", currentProject.ProjectId)
+	}
+}
 
-func TestQueryProject(t *testing.T) {}
+func TestQueryProject(t *testing.T) {
+	query1 := models.Project{
+		UserId: 1,
+	}
+	projects, err := QueryProject(query1)
+	if err != nil {
+		t.Errorf("Error in Query Project: %v, query: %+v", err, query1)
+	}
+	if len(projects) != 2 {
+		t.Errorf("Expecting get 2 projects, but actual: %d, the list: %+v", len(projects), projects)
+	}
+	query2 := models.Project{
+		Public: 1,
+	}
+	projects, err = QueryProject(query2)
+	if err != nil {
+		t.Errorf("Error in Query Project: %v, query: %+v", err, query2)
+	}
+	if len(projects) != 1 {
+		t.Errorf("Expecting get 1 project, but actual: %d, the list: %+v", len(projects), projects)
+	}
+	query3 := models.Project{
+		UserId: 9,
+	}
+	projects, err = QueryProject(query3)
+	if err != nil {
+		t.Errorf("Error in Query Project: %v, Project: %+v", err, query3)
+	}
+	if len(projects) != 0 {
+		t.Errorf("Expecting get 0 project, but actual: %d, the list: %+v", len(projects), projects)
+	}
+}
 
 func getUserProjectRole(projectId int64, userId int) []models.Role {
 	o := orm.NewOrm()
@@ -524,11 +559,12 @@ func getUserProjectRole(projectId int64, userId int) []models.Role {
 	return r
 }
 
-func TestGetUserProjectRoles(t *testing.T) {}
-
-func TestGetUserProjectRole(t *testing.T) {
-	r := getUserProjectRole(currentProject.ProjectId, currentUser.UserId)
-
+func TestGetUserProjectRoles(t *testing.T) {
+	user := *currentUser
+	r, err := GetUserProjectRoles(user, currentProject.ProjectId)
+	if err != nil {
+		t.Errorf("Error happend in GetUserProjectRole: %v, user: %+v, project Id: %d", err, user, currentProject.ProjectId)
+	}
 	//Get the size of current user project role.
 	if len(r) != 1 {
 		t.Errorf("The user, id: %d, should only have one role in project, id: %d, but actual: %d", currentUser.UserId, currentProject.ProjectId, len(r))
@@ -536,6 +572,15 @@ func TestGetUserProjectRole(t *testing.T) {
 
 	if r[0].Name != "projectAdmin" {
 		t.Errorf("the expected rolename id: projectAdmin, actual: %s", r[0].Name)
+	}
+	user.RoleId = 1
+	r, err = GetUserProjectRoles(user, currentProject.ProjectId)
+	if err != nil {
+		t.Errorf("Error happened in GetUserProjectRole: %v, user: %+v, project Id: %d", err, user, currentProject.ProjectId)
+	}
+	// Get the size of current project role.
+	if len(r) != 0 {
+		t.Errorf("The user, id: %d, should not have role id: 1 in project id: %d, actual role list: %v", currentUser.UserId, currentProject.ProjectId, r)
 	}
 }
 
@@ -593,7 +638,31 @@ func TestDeleteUserProjectRole(t *testing.T) {
 	}
 }
 
-func TestToggleAdminRole(t *testing.T) {}
+func TestToggleAdminRole(t *testing.T) {
+	err := ToggleUserAdminRole(*currentUser)
+	if err != nil {
+		t.Errorf("Error in toggle ToggleUserAdmin role: %v, user: %+v", err, currentUser)
+	}
+	isAdmin, err := IsAdminRole(currentUser.UserId)
+	if err != nil {
+		t.Errorf("Error in IsAdminRole: %v, user id: %d", err, currentUser.UserId)
+	}
+	if !isAdmin {
+		t.Errorf("User is not admin after toggled, user id: %d", currentUser.UserId)
+	}
+	err = ToggleUserAdminRole(*currentUser)
+	if err != nil {
+		t.Errorf("Error in toggle TogggleUserAdim role: %v, user: %+v", err, currentUser)
+	}
+	isAdmin, err = IsAdminRole(currentUser.UserId)
+	if err != nil {
+		t.Errorf("Error in IsAdminRoel: %v, user id: %d", err, currentUser.UserId)
+	}
+	if isAdmin {
+		t.Errorf("User is still admin after toggle, user id: %d", currentUser.UserId)
+	}
+
+}
 
 func TestDeleteUser(t *testing.T) {
 	err := DeleteUser(currentUser.UserId)
