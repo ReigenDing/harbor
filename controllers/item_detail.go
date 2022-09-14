@@ -65,7 +65,7 @@ func (idc *ItemDetailController) Get() {
 			idc.CustomAbort(http.StatusInternalServerError, "Internal error.")
 		}
 		if project.Public == 0 && len(roleList) == 0 {
-			idc.Redirect("/signIn?uri="+url.QueryEscape(idc.Ctx.Input.URI()), http.StatusFound)
+			idc.Redirect("registry/project", http.StatusFound)
 		}
 		if len(roleList) > 0 {
 			idc.Data["RoleId"] = roleList[0].RoleId
